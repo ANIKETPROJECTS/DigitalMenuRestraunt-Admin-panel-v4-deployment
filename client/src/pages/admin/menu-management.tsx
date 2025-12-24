@@ -770,7 +770,7 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center text-blue-600 font-semibold">
                               <IndianRupee className="w-4 h-4 mr-1 shrink-0" />
-                              <span className="truncate">{item.price.toFixed(0)}</span>
+                              <span className="truncate">{Number(item.price).toFixed(0)}</span>
                             </div>
                             <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs truncate max-w-[100px]">
                               {item.category}
