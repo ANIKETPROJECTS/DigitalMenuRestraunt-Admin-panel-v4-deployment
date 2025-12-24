@@ -5,6 +5,7 @@ import { connectToDatabase } from "./db/mongodb";
 import { Restaurant } from "./models/Restaurant";
 import { MenuItem } from "./models/MenuItem";
 import { Admin } from "./models/Admin";
+import { Image } from "./models/Image";
 import { authenticateAdmin, generateToken, AuthRequest } from "./middleware/auth";
 import bcrypt from "bcryptjs";
 import { validateAdminCredentials } from "./fallback-auth";
@@ -1201,10 +1202,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Image Upload Route
+  // Image Upload Route - Store in MongoDB
   app.post("/api/admin/upload-image", authenticateAdmin, upload.single('image'), async (req, res) => {
     try {
       const file = req.file;
+      const restaurantId = req.body.restaurantId || (req as any).user?.restaurantId;
 
       if (!file) {
         return res.status(400).json({ message: "No image file uploaded" });
@@ -1219,26 +1221,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Only image files are allowed" });
       }
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const extension = path.extname(file.originalname);
-      const filename = `menu-item-${timestamp}${extension}`;
-      const filepath = path.join('uploads', filename);
+      // Read file and convert to base64
+      const fileData = fs.readFileSync(file.path);
+      const base64Data = fileData.toString('base64');
 
-      // Move file from temp location to uploads folder
-      fs.renameSync(file.path, filepath);
+      // Save to MongoDB
+      const image = new Image({
+        data: base64Data,
+        mimeType: file.mimetype || 'image/jpeg',
+        restaurantId: restaurantId
+      });
 
-      // Return the image URL
-      const imageUrl = `/uploads/${filename}`;
+      const savedImage = await image.save();
+
+      // Clean up uploaded temp file
+      try {
+        fs.unlinkSync(file.path);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup uploaded file:', cleanupError);
+      }
+
+      // Return the image ID
       res.json({ 
         success: true,
-        imageUrl,
+        imageId: savedImage._id.toString(),
+        imageUrl: `/api/admin/images/${savedImage._id.toString()}`,
         message: "Image uploaded successfully"
       });
 
     } catch (error) {
       console.error('Error uploading image:', error);
       res.status(500).json({ message: "Failed to upload image" });
+    }
+  });
+
+  // Image Fetch Route - Retrieve from MongoDB
+  app.get("/api/admin/images/:imageId", async (req, res) => {
+    try {
+      const { imageId } = req.params;
+
+      // Validate MongoDB ObjectId
+      if (!mongoose.Types.ObjectId.isValid(imageId)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+
+      const image = await Image.findById(imageId);
+
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+
+      // Send image data as base64 data URL or binary
+      res.setHeader('Content-Type', image.mimeType);
+      res.send(Buffer.from(image.data, 'base64'));
+
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      res.status(500).json({ message: "Failed to fetch image" });
     }
   });
 

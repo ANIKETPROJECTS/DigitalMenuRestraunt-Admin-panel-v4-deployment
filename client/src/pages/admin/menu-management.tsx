@@ -369,7 +369,8 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
         
         if (response.ok) {
           const result = await response.json();
-          finalFormData.image = result.imageUrl;
+          // Store the image URL from MongoDB (not a file path)
+          finalFormData.image = result.imageUrl || result.imageId;
         } else {
           throw new Error('Image upload failed');
         }
