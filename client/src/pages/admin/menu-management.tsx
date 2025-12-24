@@ -657,13 +657,6 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
               return itemCategory === filterCategory;
             }) || [];
             
-            console.log(`📊 Category "${category}" matched ${categoryItems.length} items`);
-            console.log(`📝 Items in category:`, categoryItems.map((item: MenuItem) => ({
-              name: item.name,
-              originalCategory: item.category,
-              normalizedCategory: normalizeCategory(item.category)
-            })));
-            
             return (
               <div key={category} className="space-y-4">
                 <h2 className="text-lg sm:text-xl font-semibold text-blue-600 flex items-center break-words">

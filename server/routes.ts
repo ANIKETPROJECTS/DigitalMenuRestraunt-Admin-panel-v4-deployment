@@ -1208,12 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const file = req.file;
       const restaurantId = req.body.restaurantId || (req as any).user?.restaurantId;
 
-      console.log('📸 Image upload request received');
-      console.log('  File:', file ? `${file.originalname} (${file.size} bytes, type: ${file.mimetype})` : 'NO FILE');
-      console.log('  RestaurantId:', restaurantId || 'NOT PROVIDED');
-
       if (!file) {
-        console.error('❌ Upload failed: No file uploaded');
         return res.status(400).json({ message: "No image file uploaded" });
       }
 
@@ -1221,22 +1216,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isImageFile = file.mimetype.startsWith('image/');
       const rawFormats = ['.arw', '.cr2', '.nef', '.raf', '.rw2', '.dng', '.raw'];
       const isRawFormat = rawFormats.some(ext => file.originalname.toLowerCase().endsWith(ext));
-      
-      console.log('  Validation: isImageFile=', isImageFile, 'isRawFormat=', isRawFormat);
 
       if (!isImageFile && !isRawFormat) {
-        console.error('❌ Upload failed: Invalid file type -', file.mimetype);
         return res.status(400).json({ message: "Only image files are allowed" });
       }
 
       // Read file and convert to base64
-      console.log('  Converting to base64...');
       const fileData = fs.readFileSync(file.path);
       const base64Data = fileData.toString('base64');
-      console.log('  Base64 conversion successful, size:', base64Data.length);
 
       // Save to MongoDB
-      console.log('  Saving to MongoDB...');
       const image = new Image({
         data: base64Data,
         mimeType: file.mimetype || 'image/jpeg',
@@ -1244,19 +1233,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const savedImage = await image.save();
-      console.log('✅ Image saved successfully, ID:', savedImage._id.toString());
 
       // Clean up uploaded temp file
       try {
         fs.unlinkSync(file.path);
-        console.log('  Temp file cleaned up');
       } catch (cleanupError) {
-        console.warn('  Warning: Failed to cleanup uploaded file:', cleanupError);
+        console.warn('Failed to cleanup uploaded file:', cleanupError);
       }
 
       // Return the image ID
       const imageUrl = `/api/admin/images/${savedImage._id.toString()}`;
-      console.log('  Returning image URL:', imageUrl);
       
       res.json({ 
         success: true,
@@ -1266,9 +1252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error('❌ Error uploading image:', error);
-      console.error('  Error details:', error instanceof Error ? error.message : JSON.stringify(error));
-      res.status(500).json({ message: "Failed to upload image", error: error instanceof Error ? error.message : 'Unknown error' });
+      console.error('Error uploading image:', error);
+      res.status(500).json({ message: "Failed to upload image" });
     }
   });
 
