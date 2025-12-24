@@ -442,7 +442,7 @@ export async function fetchMenuItemsFromCustomDB(connection: mongoose.Connection
         const items = await Promise.race([
           connection.db.collection(collection.name).find({}).toArray(),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Collection query timeout")), 2000)
+            setTimeout(() => reject(new Error("Collection query timeout")), 10000)
           )
         ]) as any[];
         
