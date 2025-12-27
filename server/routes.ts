@@ -181,15 +181,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { id } = req.params;
-      const { email, assignedRestaurant } = req.body;
+      const { username, email, password, assignedRestaurant } = req.body;
 
       if (!id) {
         return res.status(400).json({ message: "User ID is required" });
       }
 
       const updateData: any = {};
+      if (username !== undefined) {
+        updateData.username = username;
+      }
       if (email !== undefined) {
         updateData.email = email;
+      }
+      if (password !== undefined && password) {
+        // Hash the password if provided
+        updateData.password = await bcrypt.hash(password, 10);
       }
       if (assignedRestaurant !== undefined) {
         updateData.assignedRestaurant = assignedRestaurant || null;

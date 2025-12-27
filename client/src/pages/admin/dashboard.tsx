@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const [editedUser, setEditedUser] = useState({
     username: "",
     email: "",
+    password: "",
     assignedRestaurant: ""
   });
 
@@ -120,10 +121,14 @@ export default function AdminDashboard() {
   };
 
   const editUserMutation = useMutation({
-    mutationFn: async (userData: { id: string; email: string; assignedRestaurant: string }) => {
+    mutationFn: async (userData: { id: string; username: string; email: string; password?: string; assignedRestaurant: string }) => {
+      const body: any = { username: userData.username, email: userData.email, assignedRestaurant: userData.assignedRestaurant };
+      if (userData.password) {
+        body.password = userData.password;
+      }
       return await apiRequest(`/api/admin/users/${userData.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ email: userData.email, assignedRestaurant: userData.assignedRestaurant }),
+        body: JSON.stringify(body),
       });
     },
     onSuccess: () => {
@@ -157,6 +162,7 @@ export default function AdminDashboard() {
     setEditedUser({
       username: user.username,
       email: user.email,
+      password: "",
       assignedRestaurant: user.assignedRestaurant || ""
     });
     setEditUserModalOpen(true);
@@ -511,12 +517,16 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Username (Read-only)</Label>
-              <Input value={editedUser.username} disabled />
+              <Label>Username</Label>
+              <Input value={editedUser.username} onChange={e => setEditedUser({...editedUser, username: e.target.value})} />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
               <Input type="email" value={editedUser.email} onChange={e => setEditedUser({...editedUser, email: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Password (Leave empty to keep current)</Label>
+              <Input type="password" value={editedUser.password} onChange={e => setEditedUser({...editedUser, password: e.target.value})} placeholder="Enter new password or leave blank" />
             </div>
             <div className="space-y-2">
               <Label>Assign Restaurant</Label>
@@ -535,7 +545,7 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUserModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => editUserMutation.mutate({ id: editingUser._id, email: editedUser.email, assignedRestaurant: editedUser.assignedRestaurant })} disabled={editUserMutation.isPending}>
+            <Button onClick={() => editUserMutation.mutate({ id: editingUser._id, username: editedUser.username, email: editedUser.email, password: editedUser.password, assignedRestaurant: editedUser.assignedRestaurant })} disabled={editUserMutation.isPending}>
               Save Changes
             </Button>
           </DialogFooter>

@@ -43,3 +43,11 @@
     - Proper error handling and validation on both endpoints
     - Returns updated/deleted user in response
     - Workflow restarted - backend endpoints now functional
+[x] 18. Enhanced Edit User Dialog with full editable fields:
+    - Changed Username from read-only to editable field
+    - Added Password field for updating login credentials
+    - Password field shows "Leave empty to keep current" placeholder
+    - Updated backend PATCH endpoint to handle username and password updates
+    - Password is hashed before storing in database using bcrypt
+    - Frontend mutation now sends username, email, password (optional), and assignedRestaurant
+    - Workflow restarted and verified - all fields fully editable
