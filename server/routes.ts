@@ -297,12 +297,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error("MongoDB timeout")), 5000)
           )
-        ]);
+        ]) as any;
         
         if (admin) {
           console.log(`✅ Admin found in DB: ${admin.username} (${admin.role})`);
           const isValidPassword = await bcrypt.compare(password, admin.password);
           if (isValidPassword) {
+            // Check if email is available for OTP
+            if (!admin.email) {
+              console.warn(`⚠️ Admin ${username} has no email assigned, skipping OTP`);
+              const token = generateToken(admin._id.toString());
+              return res.json({ 
+                token, 
+                admin: { 
+                  id: admin._id, 
+                  username: admin.username, 
+                  email: admin.email, 
+                  role: admin.role 
+                } 
+              });
+            }
+
             // Generate OTP
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             admin.otp = otp;
@@ -311,6 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Send Email
             try {
+              console.log(`📧 Sending OTP to: ${admin.email}`);
               await sendOTPEmail(admin.email, otp);
               return res.json({ 
                 requiresOtp: true,
@@ -361,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and OTP are required" });
       }
 
-      const admin = await Admin.findOne({ username });
+      const admin = await Admin.findOne({ username }) as any;
       if (!admin || !admin.otp || !admin.otpExpires) {
         return res.status(400).json({ message: "Invalid verification request" });
       }
