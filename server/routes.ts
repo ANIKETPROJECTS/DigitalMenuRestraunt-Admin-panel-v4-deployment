@@ -19,6 +19,27 @@ import path from 'path';
 import fs from 'fs';
 import mongoose from 'mongoose';
 
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+async function sendOTPEmail(email: string, otp: string) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Your Login OTP',
+    text: `Your One-Time Password for login is: ${otp}. It will expire in 10 minutes.`,
+    html: `<p>Your One-Time Password for login is: <strong>${otp}</strong>.</p><p>It will expire in 10 minutes.</p>`,
+  };
+  await transporter.sendMail(mailOptions);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Connect to MongoDB
   await connectToDatabase();
@@ -282,16 +303,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`✅ Admin found in DB: ${admin.username} (${admin.role})`);
           const isValidPassword = await bcrypt.compare(password, admin.password);
           if (isValidPassword) {
-            const token = generateToken(admin._id.toString());
-            return res.json({ 
-              token, 
-              admin: { 
-                id: admin._id, 
-                username: admin.username, 
-                email: admin.email, 
-                role: admin.role 
-              } 
-            });
+            // Generate OTP
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            admin.otp = otp;
+            admin.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+            await admin.save();
+
+            // Send Email
+            try {
+              await sendOTPEmail(admin.email, otp);
+              return res.json({ 
+                requiresOtp: true,
+                message: "OTP sent to your registered email"
+              });
+            } catch (emailError) {
+              console.error("Failed to send OTP email:", emailError);
+              return res.status(500).json({ message: "Failed to send OTP email" });
+            }
           }
         } else {
           console.log(`⚠️ Admin not found in DB: ${username}`);
@@ -305,11 +333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fallbackAdmin = await validateAdminCredentials(username, password);
       if (fallbackAdmin) {
         console.log(`✅ Fallback admin authenticated: ${username}`);
-        // If the fallback matches the master admin credentials, ensure it's a master login
-        if (username === "admin" && role !== "master") {
-           return res.status(403).json({ message: "Invalid credentials" });
-        }
-
+        
+        // Skip OTP for fallback admin to avoid lockout if email is not configured correctly
         const token = generateToken(fallbackAdmin.id);
         return res.json({ 
           token, 
@@ -325,6 +350,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("🚨 Login error:", error);
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // OTP Verification Route
+  app.post("/api/admin/verify-otp", async (req, res) => {
+    try {
+      const { username, otp } = req.body;
+      if (!username || !otp) {
+        return res.status(400).json({ message: "Username and OTP are required" });
+      }
+
+      const admin = await Admin.findOne({ username });
+      if (!admin || !admin.otp || !admin.otpExpires) {
+        return res.status(400).json({ message: "Invalid verification request" });
+      }
+
+      if (admin.otp !== otp || admin.otpExpires < new Date()) {
+        return res.status(401).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Clear OTP after successful verification
+      admin.otp = undefined;
+      admin.otpExpires = undefined;
+      await admin.save();
+
+      const token = generateToken(admin._id.toString());
+      res.json({
+        token,
+        admin: {
+          id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          role: admin.role
+        }
+      });
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      res.status(500).json({ message: "Verification failed" });
     }
   });
 

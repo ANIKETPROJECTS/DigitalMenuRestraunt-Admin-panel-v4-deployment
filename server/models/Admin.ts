@@ -65,6 +65,15 @@ const adminSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
     required: false
+  },
+  // OTP settings
+  otp: {
+    type: String,
+    required: false
+  },
+  otpExpires: {
+    type: Date,
+    required: false
   }
 }, {
   timestamps: true

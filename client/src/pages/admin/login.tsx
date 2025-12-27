@@ -14,6 +14,8 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
   const [role, setRole] = useState("admin");
   const { toast } = useToast();
 
@@ -25,6 +27,14 @@ export default function AdminLogin() {
       });
     },
     onSuccess: (data) => {
+      if (data.requiresOtp) {
+        setShowOtp(true);
+        toast({
+          title: "OTP Sent",
+          description: data.message,
+        });
+        return;
+      }
       localStorage.setItem("adminToken", data.token);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       // Clear TanStack Query cache on login to ensure fresh data for the new user/role
@@ -44,17 +54,55 @@ export default function AdminLogin() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) {
+  const verifyOtpMutation = useMutation({
+    mutationFn: async (otpData: { username: string; otp: string }) => {
+      return await apiRequest("/api/admin/verify-otp", {
+        method: "POST",
+        body: JSON.stringify(otpData),
+      });
+    },
+    onSuccess: (data) => {
+      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("adminUser", JSON.stringify(data.admin));
+      queryClient.clear();
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
+      setLocation("/admin/dashboard");
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: error.message || "Invalid OTP",
         variant: "destructive",
       });
-      return;
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (showOtp) {
+      if (!otp) {
+        toast({
+          title: "Error",
+          description: "Please enter the OTP",
+          variant: "destructive",
+        });
+        return;
+      }
+      verifyOtpMutation.mutate({ username, otp });
+    } else {
+      if (!username || !password) {
+        toast({
+          title: "Error",
+          description: "Please fill in all fields",
+          variant: "destructive",
+        });
+        return;
+      }
+      loginMutation.mutate({ username, password, role });
     }
-    loginMutation.mutate({ username, password, role });
   };
 
   return (
@@ -75,60 +123,95 @@ export default function AdminLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
-          <Tabs defaultValue="admin" onValueChange={setRole} className="w-full mb-6">
-            <TabsList className="grid w-full grid-cols-2 bg-blue-600 p-1">
-              <TabsTrigger 
-                value="admin" 
-                className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-blue-600 border border-transparent data-[state=active]:border-white"
-              >
-                <User className="w-4 h-4" />
-                Admin User
-              </TabsTrigger>
-              <TabsTrigger 
-                value="master" 
-                className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-blue-600 border border-transparent data-[state=active]:border-white"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                Master Admin
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {!showOtp && (
+            <Tabs defaultValue="admin" onValueChange={setRole} className="w-full mb-6">
+              <TabsList className="grid w-full grid-cols-2 bg-blue-600 p-1">
+                <TabsTrigger 
+                  value="admin" 
+                  className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-blue-600 border border-transparent data-[state=active]:border-white"
+                >
+                  <User className="w-4 h-4" />
+                  Admin User
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="master" 
+                  className="flex items-center gap-2 text-white data-[state=active]:bg-white data-[state=active]:text-blue-600 border border-transparent data-[state=active]:border-white"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Master Admin
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                Username
-              </Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
-                placeholder={`Enter your ${role} username`}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
+            {!showOtp ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                    placeholder={`Enter your ${role} username`}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="otp" className="text-sm font-medium text-gray-700">
+                  Enter OTP
+                </Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base text-center text-2xl tracking-widest"
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                />
+                <p className="text-xs text-gray-500 text-center">
+                  Check your email for the 6-digit verification code.
+                </p>
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  className="w-full text-blue-600 text-xs"
+                  onClick={() => setShowOtp(false)}
+                >
+                  Back to Login
+                </Button>
+              </div>
+            )}
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 text-sm sm:text-base mt-6"
-              disabled={loginMutation.isPending}
+              disabled={loginMutation.isPending || verifyOtpMutation.isPending}
             >
-              {loginMutation.isPending ? "Signing in..." : `Sign In as ${role === 'admin' ? 'Admin' : 'Master Admin'}`}
+              {showOtp 
+                ? (verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP")
+                : (loginMutation.isPending ? "Signing in..." : `Sign In as ${role === 'admin' ? 'Admin' : 'Master Admin'}`)}
             </Button>
           </form>
         </CardContent>
