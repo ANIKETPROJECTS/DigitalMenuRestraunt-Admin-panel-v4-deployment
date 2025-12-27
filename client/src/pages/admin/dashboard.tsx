@@ -50,6 +50,13 @@ export default function AdminDashboard() {
     },
   });
 
+  const { data: adminUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      return await apiRequest("/api/admin/users");
+    },
+  });
+
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUser) => {
       return await apiRequest("/api/admin/users", {
@@ -105,7 +112,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || usersLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-blue-600 text-lg">Loading...</div>
@@ -210,6 +217,69 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Admin Users Section - Only for Master Admin */}
+        {isMaster && (
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Admin Users</h2>
+            </div>
+
+            {adminUsers?.length === 0 ? (
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardContent className="p-6 sm:p-8 text-center">
+                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">No admin users found</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                {adminUsers?.map((user: any) => (
+                  <Card key={user._id} className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-base sm:text-lg text-gray-900 truncate">
+                            {user.username}
+                          </CardTitle>
+                          <CardDescription className="text-sm text-gray-600 truncate">
+                            {user.email}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          variant="default" 
+                          className={`${
+                            user.role === 'master' 
+                              ? 'bg-purple-100 text-purple-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          } flex-shrink-0`}
+                        >
+                          {user.role === 'master' ? 'Master' : 'Admin'}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent>
+                      {user.assignedRestaurant && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Assigned Restaurant:</span>
+                          </p>
+                          <p className="text-sm text-blue-600 truncate">
+                            {restaurants?.find((r: any) => r._id === user.assignedRestaurant)?.name || 'Unknown'}
+                          </p>
+                        </div>
+                      )}
+                      {!user.assignedRestaurant && (
+                        <p className="text-sm text-gray-500">No restaurant assigned</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Restaurants Section */}
         <div className="mb-8">
