@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload, Search } from "lucide-react";
 import { BulkMenuImport } from "@/components/BulkMenuImport";
 
 interface MenuItem {
@@ -59,6 +59,7 @@ export default function MenuManagement() {
     image: "",
     isAvailable: true,
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Enhanced category normalization function
   const normalizeCategory = (cat: string) => {
@@ -400,6 +401,15 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
     setFormData(prev => ({ ...prev, image: "" }));
   };
 
+  const filteredMenuItems = menuItems?.filter((item: MenuItem) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(searchLower) ||
+      item.description.toLowerCase().includes(searchLower) ||
+      item.category.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -658,20 +668,42 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
           </div>
         </div>
 
+          {/* Search Bar */}
+          <div className="relative max-w-md mb-8">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search items by name, description, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-600"
+                onClick={() => setSearchQuery("")}
+              >
+                ×
+              </Button>
+            )}
+          </div>
+
         {/* Menu Items by Category */}
         <div className="space-y-8">
           {categories.map((category) => {
             // STRICT category filtering - exact match only to prevent cross-category contamination
-            const categoryItems = menuItems?.filter((item: MenuItem) => {
+            const categoryItems = filteredMenuItems.filter((item: MenuItem) => {
               if (!item.category) return false;
               
-              // Only exact match - no fuzzy or contains matching to prevent items appearing in wrong categories
-              // This prevents issues like "potrice" items appearing in "rice" category
               const itemCategory = item.category.toLowerCase().trim();
               const filterCategory = category.toLowerCase().trim();
               
               return itemCategory === filterCategory;
-            }) || [];
+            });
+            
+            if (categoryItems.length === 0 && searchQuery) return null;
             
             return (
               <div key={category} className="space-y-4">
