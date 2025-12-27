@@ -36,3 +36,10 @@
     - Now shows "No Restaurant" label with "unassigned" value
     - Converts back to empty string when saving
     - Workflow restarted and verified - no console errors
+[x] 17. Added missing PATCH and DELETE backend endpoints for users:
+    - Added PATCH /api/admin/users/:id endpoint to update user email and assignedRestaurant
+    - Added DELETE /api/admin/users/:id endpoint to delete users
+    - Both endpoints require Master Admin authentication
+    - Proper error handling and validation on both endpoints
+    - Returns updated/deleted user in response
+    - Workflow restarted - backend endpoints now functional

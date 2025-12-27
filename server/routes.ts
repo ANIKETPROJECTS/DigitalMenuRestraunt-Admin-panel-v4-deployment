@@ -168,6 +168,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update Admin User
+  app.patch("/api/admin/users/:id", authenticateAdmin, async (req: any, res: any) => {
+    try {
+      const admin = (req as any).admin;
+      const isAdminUsername = admin.username?.toLowerCase() === 'admin';
+      const isMasterRole = admin.role === 'master';
+      const isMaster = isMasterRole || isAdminUsername;
+
+      if (!isMaster) {
+        return res.status(403).json({ message: "Only Master Admin can update users" });
+      }
+
+      const { id } = req.params;
+      const { email, assignedRestaurant } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      const updateData: any = {};
+      if (email !== undefined) {
+        updateData.email = email;
+      }
+      if (assignedRestaurant !== undefined) {
+        updateData.assignedRestaurant = assignedRestaurant || null;
+      }
+
+      const updatedUser = await Admin.findByIdAndUpdate(id, updateData, { new: true }).populate('assignedRestaurant');
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User updated successfully", user: updatedUser });
+    } catch (error: any) {
+      console.error("Update user error:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete Admin User
+  app.delete("/api/admin/users/:id", authenticateAdmin, async (req: any, res: any) => {
+    try {
+      const admin = (req as any).admin;
+      const isAdminUsername = admin.username?.toLowerCase() === 'admin';
+      const isMasterRole = admin.role === 'master';
+      const isMaster = isMasterRole || isAdminUsername;
+
+      if (!isMaster) {
+        return res.status(403).json({ message: "Only Master Admin can delete users" });
+      }
+
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      const deletedUser = await Admin.findByIdAndDelete(id);
+      
+      if (!deletedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User deleted successfully" });
+    } catch (error: any) {
+      console.error("Delete user error:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   // Admin Authentication Routes
   app.post("/api/admin/login", async (req, res) => {
     try {
