@@ -101,11 +101,8 @@ export default function AdminDashboard() {
     localStorage.removeItem("adminUser");
     // Clear TanStack Query cache on logout
     queryClient.clear();
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-    setLocation("/admin/login");
+    // Force page refresh to clear all application state
+    window.location.href = "/admin/login";
   };
 
   const deleteMutation = useMutation({

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Crown, Shield, User, ShieldCheck } from "lucide-react";
 
 export default function AdminLogin() {
@@ -29,11 +29,8 @@ export default function AdminLogin() {
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       // Clear TanStack Query cache on login to ensure fresh data for the new user/role
       queryClient.clear();
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-      setLocation("/admin/dashboard");
+      // Force page refresh to ensure all state is reset
+      window.location.reload();
     },
     onError: (error: any) => {
       toast({
