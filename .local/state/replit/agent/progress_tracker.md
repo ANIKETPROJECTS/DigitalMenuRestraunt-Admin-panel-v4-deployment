@@ -30,3 +30,4 @@
 [x] 30. Re-installed cross-env package after session restart (Dec 27, 2024)
 [x] 31. Fixed data staleness by clearing TanStack Query cache on login/logout
 [x] 32. Added query invalidation for user creation to ensure dashboard reflects new users immediately
+[x] 33. Reverted forced refreshes and ensured proper state updates via programmatic navigation and query invalidation

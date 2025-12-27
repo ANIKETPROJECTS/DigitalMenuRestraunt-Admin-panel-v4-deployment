@@ -29,8 +29,11 @@ export default function AdminLogin() {
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
       // Clear TanStack Query cache on login to ensure fresh data for the new user/role
       queryClient.clear();
-      // Force page refresh to ensure all state is reset
-      window.location.reload();
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
+      setLocation("/admin/dashboard");
     },
     onError: (error: any) => {
       toast({

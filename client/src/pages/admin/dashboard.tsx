@@ -53,13 +53,12 @@ export default function AdminDashboard() {
   const adminUser = JSON.parse(localStorage.getItem("adminUser") || "{}");
   const isMaster = adminUser.role === 'master' || adminUser.username === 'admin' || adminUser.username?.toLowerCase() === 'admin';
 
-  // Invalidate queries when the logged-in admin user changes (e.g., switching from regular admin to master admin)
+  // Invalidate queries when the admin user changes to ensure fresh data for different roles
   useEffect(() => {
     const currentAdminId = adminUser._id || adminUser.id || "";
     if (lastAdminUser && lastAdminUser !== currentAdminId) {
       console.log(`👤 Admin user changed from ${lastAdminUser} to ${currentAdminId} - invalidating cache`);
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/restaurants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries();
     }
     setLastAdminUser(currentAdminId);
   }, [adminUser._id, adminUser.id, lastAdminUser]);
@@ -101,8 +100,11 @@ export default function AdminDashboard() {
     localStorage.removeItem("adminUser");
     // Clear TanStack Query cache on logout
     queryClient.clear();
-    // Force page refresh to clear all application state
-    window.location.href = "/admin/login";
+    toast({
+      title: "Logged out",
+      description: "You have been logged out successfully",
+    });
+    setLocation("/admin/login");
   };
 
   const deleteMutation = useMutation({
