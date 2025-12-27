@@ -27,6 +27,8 @@ export default function AdminLogin() {
     onSuccess: (data) => {
       localStorage.setItem("adminToken", data.token);
       localStorage.setItem("adminUser", JSON.stringify(data.admin));
+      // Clear TanStack Query cache on login to ensure fresh data for the new user/role
+      queryClient.clear();
       toast({
         title: "Success",
         description: "Logged in successfully",

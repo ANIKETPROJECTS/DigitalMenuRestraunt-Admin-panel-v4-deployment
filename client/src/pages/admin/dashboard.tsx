@@ -89,6 +89,7 @@ export default function AdminDashboard() {
       toast({ title: "Success", description: "Admin user created successfully" });
       setUserModalOpen(false);
       setNewUser({ username: "", password: "", email: "", assignedRestaurant: "" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to create user", variant: "destructive" });
@@ -98,6 +99,8 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
+    // Clear TanStack Query cache on logout
+    queryClient.clear();
     toast({
       title: "Logged out",
       description: "You have been logged out successfully",

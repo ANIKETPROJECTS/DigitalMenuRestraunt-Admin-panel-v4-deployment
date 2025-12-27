@@ -28,3 +28,5 @@
     - Master admins continue to see all 4 tabs: Profile, Theme, Security, System
     - Workflow restarted and verified - Settings modal now role-aware
 [x] 30. Re-installed cross-env package after session restart (Dec 27, 2024)
+[x] 31. Fixed data staleness by clearing TanStack Query cache on login/logout
+[x] 32. Added query invalidation for user creation to ensure dashboard reflects new users immediately
