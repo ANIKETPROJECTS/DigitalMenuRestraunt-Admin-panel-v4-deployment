@@ -21,23 +21,52 @@ import mongoose from 'mongoose';
 
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+let transporter: nodemailer.Transporter | null = null;
+
+function createTransporter() {
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASS?.trim();
+  
+  if (!emailUser || !emailPass) {
+    throw new Error(`Missing email credentials. EMAIL_USER: ${emailUser ? 'set' : 'missing'}, EMAIL_PASS: ${emailPass ? 'set' : 'missing'}`);
+  }
+  
+  console.log(`📧 Initializing email transporter for: ${emailUser}`);
+  
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: emailUser,
+      pass: emailPass,
+    },
+  });
+}
 
 async function sendOTPEmail(email: string, otp: string) {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Your Login OTP',
-    text: `Your One-Time Password for login is: ${otp}. It will expire in 10 minutes.`,
-    html: `<p>Your One-Time Password for login is: <strong>${otp}</strong>.</p><p>It will expire in 10 minutes.</p>`,
-  };
-  await transporter.sendMail(mailOptions);
+  try {
+    if (!transporter) {
+      transporter = createTransporter();
+    }
+    
+    const emailUser = process.env.EMAIL_USER?.trim();
+    if (!emailUser) {
+      throw new Error('EMAIL_USER environment variable is not set');
+    }
+    
+    const mailOptions = {
+      from: emailUser,
+      to: email,
+      subject: 'Your Login OTP',
+      text: `Your One-Time Password for login is: ${otp}. It will expire in 10 minutes.`,
+      html: `<p>Your One-Time Password for login is: <strong>${otp}</strong>.</p><p>It will expire in 10 minutes.</p>`,
+    };
+    
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ OTP email sent successfully to: ${email}`);
+  } catch (error) {
+    console.error(`❌ Failed to send OTP email: ${error instanceof Error ? error.message : error}`);
+    throw error;
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

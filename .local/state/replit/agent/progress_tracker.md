@@ -45,3 +45,10 @@
     - Workflow restarted and confirmed loading: [dotenv@17.2.1] injecting env from .env
     - Email credentials will be used every time the app starts
     - Ready for OTP email sending functionality
+[x] 37. Fixed local VSCode email credential loading issue
+    - Changed nodemailer transporter to lazy-loading (created on first use, not at module load)
+    - Added .trim() to email credentials to remove whitespace issues
+    - Added validation to check if EMAIL_USER and EMAIL_PASS are set before using
+    - Added detailed error messages for debugging
+    - Workflow restarted and verified - application running successfully
+    - Local VSCode users can now run: npm install && npm run dev
