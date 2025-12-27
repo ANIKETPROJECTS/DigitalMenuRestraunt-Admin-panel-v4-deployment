@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [currentView, setCurrentView] = useState<'users' | 'restaurants'>('restaurants');
   const [newUser, setNewUser] = useState({
     username: "",
     password: "",
@@ -280,8 +281,40 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Admin Users Section - Only for Master Admin */}
+        {/* View Toggle - Only for Master Admin */}
         {isMaster && (
+          <div className="mb-6 flex gap-2">
+            <Button
+              onClick={() => setCurrentView('users')}
+              variant={currentView === 'users' ? 'default' : 'outline'}
+              className={`${
+                currentView === 'users'
+                  ? 'bg-blue-600 text-white'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              data-testid="button-view-users"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Admin Users
+            </Button>
+            <Button
+              onClick={() => setCurrentView('restaurants')}
+              variant={currentView === 'restaurants' ? 'default' : 'outline'}
+              className={`${
+                currentView === 'restaurants'
+                  ? 'bg-blue-600 text-white'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              data-testid="button-view-restaurants"
+            >
+              <Store className="w-4 h-4 mr-2" />
+              Restaurants
+            </Button>
+          </div>
+        )}
+
+        {/* Admin Users Section - Only for Master Admin */}
+        {isMaster && currentView === 'users' && (
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Admin Users</h2>
@@ -365,6 +398,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Restaurants Section */}
+        {currentView === 'restaurants' && (
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Restaurants</h2>
@@ -506,6 +540,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+        )}
       </main>
 
       {/* Edit User Dialog */}

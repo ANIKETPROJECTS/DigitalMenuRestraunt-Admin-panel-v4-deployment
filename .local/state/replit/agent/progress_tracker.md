@@ -60,3 +60,10 @@
     - Now correctly shows restaurant name from database instead of "Unknown"
     - Workflow restarted and verified
 [x] 20. Re-installed cross-env package after session restart - application running successfully
+[x] 21. Added toggle to switch between Admin Users and Restaurants views:
+    - Added state: currentView ('users' or 'restaurants', default 'restaurants')
+    - Added toggle buttons after statistics cards (visible only to Master Admin)
+    - Admin Users section now only shows when currentView === 'users'
+    - Restaurants section now only shows when currentView === 'restaurants'
+    - Toggle buttons highlight the active view with blue background
+    - Workflow restarted and verified - toggle is working
