@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload, Search } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload, Search, Download } from "lucide-react";
 import { BulkMenuImport } from "@/components/BulkMenuImport";
 
 interface MenuItem {
@@ -410,6 +410,49 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
     );
   }) || [];
 
+  const handleExport = () => {
+    if (!menuItems || menuItems.length === 0) {
+      toast({
+        title: "No items to export",
+        description: "There are no menu items to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert menu items to CSV format
+    const headers = ["Item Name", "Category", "Price", "Description", "Is Veg", "Available"];
+    const csvContent = [
+      headers.join(","),
+      ...menuItems.map((item: MenuItem) => [
+        `"${item.name.replace(/"/g, '""')}"`,
+        `"${item.category.replace(/"/g, '""')}"`,
+        `"${item.price}"`,
+        `"${item.description.replace(/"/g, '""')}"`,
+        item.isVeg ? "Yes" : "No",
+        item.isAvailable ? "Yes" : "No",
+      ].join(",")),
+    ].join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${restaurant?.name}-menu-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Success",
+      description: `Exported ${menuItems.length} menu items`,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -471,6 +514,16 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
                   </span>
                 </Button>
               )}
+              
+              <Button
+                onClick={handleExport}
+                variant="outline"
+                className="border-purple-600 text-purple-600 hover:bg-purple-50 w-full sm:w-auto"
+                data-testid="button-export-menu"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span className="truncate">Export</span>
+              </Button>
               
               <Button
                 onClick={() => setIsBulkImportOpen(true)}
