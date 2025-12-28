@@ -835,58 +835,51 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
             )}
           </div>
 
-          {/* Sort and Filter Controls */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-8">
-            {/* Sort By */}
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="bg-white border-gray-200 h-10" data-testid="select-sort-by">
-                <ArrowUpDown className="w-3 h-3 mr-1" />
+          {/* Sort and Filter Controls - Simplified */}
+          <div className="flex gap-2 mb-8 flex-wrap">
+            {/* Sort Dropdown */}
+            <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value: string) => {
+              const [sort, order] = value.split('-') as [string, "asc" | "desc"];
+              setSortBy(sort as any);
+              setSortOrder(order);
+            }}>
+              <SelectTrigger className="bg-blue-600 text-white border-blue-600 h-10 min-w-fit hover:bg-blue-700" data-testid="select-sort-by">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">By Name</SelectItem>
-                <SelectItem value="price">By Price</SelectItem>
-                <SelectItem value="category">By Category</SelectItem>
-                <SelectItem value="recent">By Recent</SelectItem>
+                <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                <SelectItem value="price-asc">Price (Low-High)</SelectItem>
+                <SelectItem value="price-desc">Price (High-Low)</SelectItem>
+                <SelectItem value="category-asc">Category (A-Z)</SelectItem>
+                <SelectItem value="category-desc">Category (Z-A)</SelectItem>
+                <SelectItem value="recent-desc">Recent First</SelectItem>
               </SelectContent>
             </Select>
 
-            {/* Sort Order */}
-            <Button
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              variant="outline"
-              className="border-gray-200 h-10 text-xs sm:text-sm"
-              data-testid="button-sort-order"
-            >
-              {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
-            </Button>
-
-            {/* Filter by Veg */}
-            <Select value={filterVeg} onValueChange={(value: any) => setFilterVeg(value)}>
-              <SelectTrigger className="bg-white border-gray-200 h-10" data-testid="select-filter-veg">
-                <Leaf className="w-3 h-3 mr-1" />
-                <SelectValue placeholder="Veg" />
+            {/* Filter Dropdown */}
+            <Select value={`${filterVeg}-${filterAvailable}`} onValueChange={(value: string) => {
+              const [veg, available] = value.split('-');
+              setFilterVeg(veg as any);
+              setFilterAvailable(available as any);
+            }}>
+              <SelectTrigger className="bg-blue-600 text-white border-blue-600 h-10 min-w-fit hover:bg-blue-700" data-testid="select-filter">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="veg">Veg</SelectItem>
-                <SelectItem value="non-veg">Non-Veg</SelectItem>
+                <SelectItem value="all-all">All Items</SelectItem>
+                <SelectItem value="veg-all">Vegetarian</SelectItem>
+                <SelectItem value="non-veg-all">Non-Vegetarian</SelectItem>
+                <SelectItem value="all-available">Available Items</SelectItem>
+                <SelectItem value="all-unavailable">Unavailable Items</SelectItem>
+                <SelectItem value="veg-available">Vegetarian & Available</SelectItem>
+                <SelectItem value="non-veg-available">Non-Veg & Available</SelectItem>
               </SelectContent>
             </Select>
 
-            {/* Filter by Availability */}
-            <Select value={filterAvailable} onValueChange={(value: any) => setFilterAvailable(value)}>
-              <SelectTrigger className="bg-white border-gray-200 h-10" data-testid="select-filter-available">
-                <SelectValue placeholder="Available" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="unavailable">Unavailable</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Clear Filters */}
+            {/* Reset Button */}
             <Button
               onClick={() => {
                 setSortBy("name");
@@ -896,12 +889,11 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
                 setFilterAvailable("all");
                 setSearchQuery("");
               }}
-              variant="ghost"
-              className="border-gray-200 h-10 text-xs sm:text-sm"
-              data-testid="button-clear-filters"
+              className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4"
+              data-testid="button-reset"
             >
-              <X className="w-3 h-3 mr-1" />
-              Clear
+              <X className="w-4 h-4 mr-2" />
+              Reset
             </Button>
           </div>
 
