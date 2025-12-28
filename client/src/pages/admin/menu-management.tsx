@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload, Search, Download } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Menu, IndianRupee, Utensils, Leaf, RefreshCw, Upload, Search, Download, Filter, ArrowUpDown, X } from "lucide-react";
 import { BulkMenuImport } from "@/components/BulkMenuImport";
 import * as XLSX from "xlsx";
 
@@ -62,6 +62,11 @@ export default function MenuManagement() {
     isAvailable: true,
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "category" | "recent">("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterVeg, setFilterVeg] = useState<"all" | "veg" | "non-veg">("all");
+  const [filterAvailable, setFilterAvailable] = useState<"all" | "available" | "unavailable">("all");
 
   // Enhanced category normalization function
   const normalizeCategory = (cat: string) => {
@@ -403,13 +408,46 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
     setFormData(prev => ({ ...prev, image: "" }));
   };
 
-  const filteredMenuItems = menuItems?.filter((item: MenuItem) => {
+  const filteredAndSortedMenuItems = menuItems?.filter((item: MenuItem) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    
+    // Search filter
+    const matchesSearch = 
       item.name.toLowerCase().includes(searchLower) ||
       item.description.toLowerCase().includes(searchLower) ||
-      item.category.toLowerCase().includes(searchLower)
-    );
+      item.category.toLowerCase().includes(searchLower);
+    
+    // Category filter
+    const matchesCategory = filterCategory === "all" || item.category.toLowerCase() === filterCategory.toLowerCase();
+    
+    // Veg filter
+    const matchesVeg = filterVeg === "all" || 
+      (filterVeg === "veg" && item.isVeg) || 
+      (filterVeg === "non-veg" && !item.isVeg);
+    
+    // Availability filter
+    const matchesAvailable = filterAvailable === "all" || 
+      (filterAvailable === "available" && item.isAvailable) || 
+      (filterAvailable === "unavailable" && !item.isAvailable);
+    
+    return matchesSearch && matchesCategory && matchesVeg && matchesAvailable;
+  }).sort((a: MenuItem, b: MenuItem) => {
+    // Sorting logic
+    let compareResult = 0;
+    
+    if (sortBy === "name") {
+      compareResult = a.name.localeCompare(b.name);
+    } else if (sortBy === "price") {
+      const priceA = typeof a.price === "string" ? parseFloat(a.price) : a.price;
+      const priceB = typeof b.price === "string" ? parseFloat(b.price) : b.price;
+      compareResult = priceA - priceB;
+    } else if (sortBy === "category") {
+      compareResult = a.category.localeCompare(b.category);
+    } else if (sortBy === "recent") {
+      compareResult = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    
+    return sortOrder === "asc" ? compareResult : -compareResult;
   }) || [];
 
   const handleExport = () => {
@@ -800,7 +838,7 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
         <div className="space-y-8">
           {categories.map((category) => {
             // STRICT category filtering - exact match only to prevent cross-category contamination
-            const categoryItems = filteredMenuItems.filter((item: MenuItem) => {
+            const categoryItems = filteredAndSortedMenuItems.filter((item: MenuItem) => {
               if (!item.category) return false;
               
               const itemCategory = item.category.toLowerCase().trim();
