@@ -511,17 +511,19 @@ export default function AdminDashboard() {
                         {restaurant.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Label htmlFor={`otp-${restaurant._id}`} className="text-xs text-gray-500">OTP Login</Label>
-                      <Switch
-                        id={`otp-${restaurant._id}`}
-                        checked={restaurant.otpEnabled !== false}
-                        onCheckedChange={(checked) => {
-                          updateOtpMutation.mutate({ id: restaurant._id, otpEnabled: checked });
-                        }}
-                        disabled={updateOtpMutation.isPending}
-                      />
-                    </div>
+                    {isMaster && (
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Label htmlFor={`otp-${restaurant._id}`} className="text-xs text-gray-500">OTP Login</Label>
+                        <Switch
+                          id={`otp-${restaurant._id}`}
+                          checked={restaurant.otpEnabled !== false}
+                          onCheckedChange={(checked) => {
+                            updateOtpMutation.mutate({ id: restaurant._id, otpEnabled: checked });
+                          }}
+                          disabled={updateOtpMutation.isPending}
+                        />
+                      </div>
+                    )}
                   </CardHeader>
                   
                   <CardContent className="flex-1 flex flex-col">
