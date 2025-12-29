@@ -381,6 +381,16 @@ else if (restaurant?.mongoUri && menuItems && menuItems.length > 0) {
       const isValidImage = file.type.startsWith('image/');
       const isValidRawFormat = validRawFormats.some(ext => fileName.endsWith(ext));
       
+      const MAX_FILE_SIZE = 200 * 1024; // 200KB limit
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "Error",
+          description: "Image size must be less than 200KB. Please compress your image or select a smaller one.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       if (!isValidImage && !isValidRawFormat) {
         toast({
           title: "Error", 

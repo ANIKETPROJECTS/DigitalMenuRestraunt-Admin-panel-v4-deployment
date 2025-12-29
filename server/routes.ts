@@ -1596,6 +1596,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Only image files are allowed" });
       }
 
+      // Validate file size (200KB limit)
+      const MAX_FILE_SIZE = 200 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        // Clean up uploaded temp file
+        try { fs.unlinkSync(file.path); } catch (e) {}
+        return res.status(400).json({ message: "Image size must be less than 200KB" });
+      }
+
       // Read file and convert to base64
       const fileData = fs.readFileSync(file.path);
       const base64Data = fileData.toString('base64');
