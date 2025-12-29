@@ -1,3 +1,4 @@
+import { setupVite, serveStatic, log } from "./vite";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 // Removed storage and cart schema imports - Admin-only system
