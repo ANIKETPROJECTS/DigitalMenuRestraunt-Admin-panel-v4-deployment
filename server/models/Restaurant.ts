@@ -50,6 +50,10 @@ const restaurantSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  otpEnabled: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

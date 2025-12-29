@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { Switch } from "@/components/ui/switch";
+
 interface Restaurant {
   _id: string;
   name: string;
@@ -25,6 +27,7 @@ interface Restaurant {
   website?: string;
   qrCode?: string;
   isActive: boolean;
+  otpEnabled: boolean;
   createdAt: string;
 }
 
@@ -190,6 +193,22 @@ export default function AdminDashboard() {
       deleteUserMutation.mutate(userId);
     }
   };
+
+  const updateOtpMutation = useMutation({
+    mutationFn: async ({ id, otpEnabled }: { id: string; otpEnabled: boolean }) => {
+      return await apiRequest(`/api/admin/restaurants/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ otpEnabled }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "OTP settings updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/restaurants"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update OTP settings", variant: "destructive" });
+    }
+  });
 
   if (isLoading || usersLoading) {
     return (
@@ -491,6 +510,17 @@ export default function AdminDashboard() {
                       >
                         {restaurant.isActive ? "Active" : "Inactive"}
                       </Badge>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Label htmlFor={`otp-${restaurant._id}`} className="text-xs text-gray-500">OTP Login</Label>
+                      <Switch
+                        id={`otp-${restaurant._id}`}
+                        checked={restaurant.otpEnabled !== false}
+                        onCheckedChange={(checked) => {
+                          updateOtpMutation.mutate({ id: restaurant._id, otpEnabled: checked });
+                        }}
+                        disabled={updateOtpMutation.isPending}
+                      />
                     </div>
                   </CardHeader>
                   

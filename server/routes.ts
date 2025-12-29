@@ -332,9 +332,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`✅ Admin found in DB: ${admin.username} (${admin.role})`);
           const isValidPassword = await bcrypt.compare(password, admin.password);
           if (isValidPassword) {
+            // Check if OTP is globally enabled for the restaurant
+            const restaurant = await Restaurant.findById(admin.assignedRestaurant);
+            const isOtpEnabled = restaurant ? restaurant.otpEnabled !== false : true;
+
             // Check if email is available for OTP
-            if (!admin.email) {
-              console.warn(`⚠️ Admin ${username} has no email assigned, skipping OTP`);
+            if (!admin.email || !isOtpEnabled) {
+              console.warn(`⚠️ Admin ${username} skipping OTP (Email: ${!!admin.email}, OTP Enabled: ${isOtpEnabled})`);
               const token = generateToken(admin._id.toString());
               return res.json({ 
                 token, 
@@ -596,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/restaurants", authenticateAdmin, async (req, res) => {
     try {
-      const { name, description, address, phone, email, image, website, mongoUri, customTypes, isActive } = req.body;
+      const { name, description, address, phone, email, image, website, mongoUri, customTypes, isActive, otpEnabled } = req.body;
       
       if (!name || !description || !address || !phone || !email || !image) {
         return res.status(400).json({ message: "All fields are required" });
@@ -657,7 +661,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             qrCode,
             mongoUri,
             customTypes: finalCustomTypes,
-            isActive: isActive ?? true
+            isActive: isActive ?? true,
+            otpEnabled: otpEnabled ?? true
           });
           
           await restaurant.save();
@@ -686,7 +691,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           qrCode,
           mongoUri,
           customTypes: customTypes || ['Starters', 'Main Course', 'Desserts', 'Beverages'],
-          isActive: isActive ?? true
+          isActive: isActive ?? true,
+          otpEnabled: otpEnabled ?? true
         });
         res.status(201).json(mockRestaurant);
       }
@@ -706,11 +712,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only Master Admin can edit restaurants" });
       }
       const { id } = req.params;
-      const { name, description, address, phone, email, image, website, mongoUri, customTypes, isActive } = req.body;
+      const { name, description, address, phone, email, image, website, mongoUri, customTypes, isActive, otpEnabled } = req.body;
 
       console.log(`🔄 Updating restaurant ${id} with data:`, {
         name, description, address, phone, email, 
-        hasImage: !!image, website, mongoUri, customTypes, isActive
+        hasImage: !!image, website, mongoUri, customTypes, isActive, otpEnabled
       });
 
       // Handle customTypes properly - it can be an array or a string
@@ -773,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const updatePromise = Restaurant.findByIdAndUpdate(
           id,
-          { name, description, address, phone, email, image, website, qrCode, mongoUri, customTypes: finalCustomTypes, isActive },
+          { name, description, address, phone, email, image, website, qrCode, mongoUri, customTypes: finalCustomTypes, isActive, otpEnabled },
           { new: true }
         );
         
