@@ -71,7 +71,9 @@ async function sendOTPEmail(email: string, otp: string) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Connect to MongoDB
+  log("🔌 Attempting to connect to MongoDB...");
   await connectToDatabase();
+  log("✅ Connected to MongoDB successfully");
   // Customer-facing routes removed - Admin-only system
 
   // Configure multer for file uploads - no size limit

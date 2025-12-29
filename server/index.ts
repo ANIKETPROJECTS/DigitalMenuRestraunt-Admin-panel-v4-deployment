@@ -14,6 +14,7 @@ const app = express();
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
+// Enhanced logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -28,13 +29,13 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      let logLine = `[API Request] ${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        logLine += ` :: Response Body: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      if (logLine.length > 200) {
+        logLine = logLine.slice(0, 199) + "… (truncated)";
       }
 
       log(logLine);
@@ -111,36 +112,48 @@ async function isPortInUse(port: number): Promise<boolean> {
 // Simplified server startup for Replit environment
 async function startServer(port: number): Promise<void> {
   try {
-    log(`🚀 Starting server on port ${port}`);
+    log(`🚀 Starting server initialization on port ${port}`);
     
     // Add static file serving for uploads
     app.use("/uploads", express.static("uploads"));
     
     // Set up routes
+    log("📝 Registering API routes...");
     const server = await registerRoutes(app);
+    log("✅ API routes registered successfully");
 
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
+      log(`❌ Server Error [${status}]: ${message}`);
+      if (err.stack) {
+        log(`📜 Stack trace: ${err.stack.split('\n').slice(0, 3).join('\n')}`);
+      }
       res.status(status).json({ message });
-      console.error(err);
     });
 
     // Setup vite or static serving
     if (app.get("env") === "development") {
+      log("🛠️  Setting up Vite for development mode...");
       await setupVite(app, server);
+      log("✅ Vite setup complete");
     } else {
+      log("📦 Setting up static file serving for production mode...");
       serveStatic(app);
+      log("✅ Static serving setup complete");
     }
 
     // Start the server
     server.listen(port, "0.0.0.0", () => {
-      log(`✅ Server successfully started on port ${port}`);
+      log(`🎉 SUCCESS: Server is listening on 0.0.0.0:${port}`);
     });
     
   } catch (error) {
-    log(`❌ Failed to start server: ${error}`);
+    log(`❌ FATAL ERROR during server startup: ${error}`);
+    if (error instanceof Error && error.stack) {
+      log(`📜 Fatal Stack trace: ${error.stack}`);
+    }
     throw error;
   }
 }
