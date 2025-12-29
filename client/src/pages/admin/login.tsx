@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Crown, Shield, User, ShieldCheck } from "lucide-react";
+import backgroundImage from "@assets/admin_bg_image_1766987541263.jpg";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -106,8 +107,19 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md mx-auto border border-blue-200 bg-white shadow-xl">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/40" />
+      
+      <Card className="w-full max-w-md mx-auto border border-blue-200 bg-white shadow-xl relative z-10">
         <CardHeader className="text-center px-4 sm:px-6">
           <div className="flex justify-center mb-4">
             <div className="relative">

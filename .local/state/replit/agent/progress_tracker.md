@@ -61,3 +61,10 @@
     - Master admin can now login without OTP when toggle is disabled
     - Regular admins still respect restaurant OTP settings
     - Workflow restarted and verified working correctly
+[x] 43. Added restaurant background image to login page (Dec 29, 2024)
+    - Imported admin_bg_image_1766987541263.jpg as background using @assets alias
+    - Applied background image with cover sizing and fixed positioning for parallax effect
+    - Added dark gradient overlay (black/40 via black/50 to black/40) for text readability
+    - White login card positioned with z-10 for proper layering
+    - Workflow restarted and verified - login page displays with elegant background
+    - Professional restaurant dining ambiance now visible on login page
