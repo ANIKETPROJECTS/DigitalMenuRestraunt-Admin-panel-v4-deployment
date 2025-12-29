@@ -35,6 +35,7 @@ interface SettingsData {
   maxRestaurants?: number;
   twoFactorEnabled?: boolean;
   loginAlerts?: boolean;
+  otpMasterAdminEnabled?: boolean;
 }
 
 const colorThemes = [
@@ -84,6 +85,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorEnabled: false,
     loginAlerts: true,
+    otpMasterAdminEnabled: false,
   });
 
   // Fetch admin profile
@@ -132,6 +134,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
       const newSecuritySettings = {
         twoFactorEnabled: settings.twoFactorEnabled || false,
         loginAlerts: settings.loginAlerts !== false,
+        otpMasterAdminEnabled: settings.otpMasterAdminEnabled || false,
       };
 
       setThemeSettings(newThemeSettings);
@@ -241,6 +244,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
       loginAlerts: securitySettings.loginAlerts,
       autoBackup: systemSettings.autoBackup,
       maxRestaurants: parseInt(systemSettings.maxRestaurants) || 10,
+      otpMasterAdminEnabled: securitySettings.otpMasterAdminEnabled,
     };
     
     settingsMutation.mutate(settingsData);
@@ -261,6 +265,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
       loginAlerts: securitySettings.loginAlerts,
       autoBackup: systemSettings.autoBackup,
       maxRestaurants: parseInt(systemSettings.maxRestaurants) || 10,
+      otpMasterAdminEnabled: securitySettings.otpMasterAdminEnabled,
     };
     
     settingsMutation.mutate(settingsData);
@@ -278,6 +283,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
       loginAlerts: securitySettings.loginAlerts,
       autoBackup: systemSettings.autoBackup,
       maxRestaurants: parseInt(systemSettings.maxRestaurants) || 10,
+      otpMasterAdminEnabled: securitySettings.otpMasterAdminEnabled,
     };
 
     console.log("Saving system settings:", settingsData); // Debug log
@@ -296,6 +302,7 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
       loginAlerts: securitySettings.loginAlerts,
       autoBackup: systemSettings.autoBackup,
       maxRestaurants: parseInt(systemSettings.maxRestaurants) || 10,
+      otpMasterAdminEnabled: securitySettings.otpMasterAdminEnabled,
     };
     
     settingsMutation.mutate(settingsData);
@@ -589,6 +596,17 @@ export default function AdminSettingsModal({ isOpen, onOpenChange }: AdminSettin
                     <Switch 
                       checked={securitySettings.loginAlerts}
                       onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, loginAlerts: checked }))}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>OTP for Master Admin</Label>
+                      <p className="text-sm text-gray-500">Enable OTP verification for master admin login</p>
+                    </div>
+                    <Switch 
+                      checked={securitySettings.otpMasterAdminEnabled}
+                      onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, otpMasterAdminEnabled: checked }))}
                     />
                   </div>
                   

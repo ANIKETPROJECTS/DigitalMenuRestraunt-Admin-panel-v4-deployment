@@ -47,3 +47,10 @@
 [x] 38. Re-installed cross-env package after session restart (Dec 29, 2024)
 [x] 39. Verified application running successfully on port 5000
 [x] 40. Session restored - application verified running (Dec 29, 2024)
+[x] 41. Added OTP toggle for Master Admin in Security tab (Dec 29, 2024)
+    - Updated Admin model with otpMasterAdminEnabled field
+    - Updated backend routes to handle OTP toggle setting
+    - Added OTP toggle switch in Security tab of Admin Settings
+    - Toggle is only visible and functional for Master Admin users
+    - Settings are persisted in MongoDB and fallback storage
+    - Workflow restarted and verified with hot reload

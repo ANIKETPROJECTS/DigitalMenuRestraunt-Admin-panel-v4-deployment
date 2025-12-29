@@ -47,6 +47,11 @@ const adminSchema = new mongoose.Schema({
     type: Number,
     default: 30 // minutes
   },
+  // OTP for Master Admin
+  otpMasterAdminEnabled: {
+    type: Boolean,
+    default: false
+  },
   // System settings
   emailNotifications: {
     type: Boolean,

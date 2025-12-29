@@ -116,6 +116,7 @@ router.get("/settings", authenticateAdmin, async (req: AuthRequest, res) => {
       loginAlerts: admin.loginAlerts !== false, // default true
       autoBackup: admin.autoBackup !== false, // default true
       maxRestaurants: admin.maxRestaurants || 10,
+      otpMasterAdminEnabled: admin.otpMasterAdminEnabled || false,
     };
     
     res.json(settings);
@@ -138,6 +139,7 @@ router.put("/settings", authenticateAdmin, async (req: AuthRequest, res) => {
       loginAlerts,
       autoBackup,
       maxRestaurants,
+      otpMasterAdminEnabled,
     } = req.body;
 
     // Handle fallback admin (not in MongoDB) - store settings in memory
@@ -152,6 +154,7 @@ router.put("/settings", authenticateAdmin, async (req: AuthRequest, res) => {
         ...(loginAlerts !== undefined && { loginAlerts }),
         ...(autoBackup !== undefined && { autoBackup }),
         ...(maxRestaurants && { maxRestaurants }),
+        ...(otpMasterAdminEnabled !== undefined && { otpMasterAdminEnabled }),
       };
       
       const updatedSettings = updateFallbackAdminSettings(settingsToUpdate);
@@ -173,6 +176,7 @@ router.put("/settings", authenticateAdmin, async (req: AuthRequest, res) => {
     if (loginAlerts !== undefined) admin.loginAlerts = loginAlerts;
     if (autoBackup !== undefined) admin.autoBackup = autoBackup;
     if (maxRestaurants) admin.maxRestaurants = maxRestaurants;
+    if (otpMasterAdminEnabled !== undefined) admin.otpMasterAdminEnabled = otpMasterAdminEnabled;
 
     await admin.save();
     
@@ -187,6 +191,7 @@ router.put("/settings", authenticateAdmin, async (req: AuthRequest, res) => {
       loginAlerts: admin.loginAlerts !== false,
       autoBackup: admin.autoBackup !== false,
       maxRestaurants: admin.maxRestaurants || 10,
+      otpMasterAdminEnabled: admin.otpMasterAdminEnabled || false,
     };
     
     res.json(updatedSettings);
