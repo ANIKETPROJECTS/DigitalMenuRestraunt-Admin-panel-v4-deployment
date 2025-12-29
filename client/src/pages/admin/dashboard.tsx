@@ -210,6 +210,25 @@ export default function AdminDashboard() {
     }
   });
 
+  const updateAllOtpMutation = useMutation({
+    mutationFn: async (otpEnabled: boolean) => {
+      const promises = restaurants.map(r => 
+        apiRequest(`/api/admin/restaurants/${r._id}`, {
+          method: "PUT",
+          body: JSON.stringify({ otpEnabled }),
+        })
+      );
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "All restaurants OTP settings updated" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/restaurants"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update all OTP settings", variant: "destructive" });
+    }
+  });
+
   if (isLoading || usersLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -438,7 +457,34 @@ export default function AdminDashboard() {
         {(!isMaster || currentView === 'restaurants') && (
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{isMaster ? 'Restaurants' : 'Your Restaurant'}</h2>
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{isMaster ? 'Restaurants' : 'Your Restaurant'}</h2>
+              {isMaster && (
+                <div className="flex items-center space-x-2 mt-2 bg-white p-2 rounded-md border shadow-sm">
+                  <span className="text-sm font-medium text-gray-700">Universal OTP:</span>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8 text-xs border-blue-600 text-blue-600"
+                      onClick={() => updateAllOtpMutation.mutate(true)}
+                      disabled={updateAllOtpMutation.isPending}
+                    >
+                      Enable All
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8 text-xs border-red-600 text-red-600"
+                      onClick={() => updateAllOtpMutation.mutate(false)}
+                      disabled={updateAllOtpMutation.isPending}
+                    >
+                      Disable All
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="flex gap-2">
               {isMaster && (
                 <Button
