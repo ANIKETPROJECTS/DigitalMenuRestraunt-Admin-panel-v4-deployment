@@ -2,7 +2,8 @@ module.exports = {
   apps: [
     {
       name: "restaurant-management-app",
-      script: "dist/index.js",
+      script: "npm",
+      args: "run start:prod",
       env: {
         NODE_ENV: "production",
         PORT: 5000
